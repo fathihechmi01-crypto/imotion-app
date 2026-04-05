@@ -2,12 +2,12 @@ import api from './api'
 
 export const reservationsService = {
   async getMine() {
-    const { data } = await api.get('/reservations')
+    const { data } = await api.get('/reservations/')
     return data
   },
 
   async book(seance_id: number) {
-    const { data } = await api.post('/reservations', { seance_id })
+    const { data } = await api.post('/reservations/', { seance_id })
     return data
   },
 

@@ -21,72 +21,40 @@ interface AuthState {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
-
-  login: (email: string, password: string) => Promise<User>
+  login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   loadUser: () => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  isLoading: false,
+  isLoading: true,
   isAuthenticated: false,
 
-  // 🔥 LOGIN
   login: async (email, password) => {
     set({ isLoading: true })
-
     try {
       await authService.login({ email, mot_de_passe: password })
-
       const user = await authService.me()
-
-      if (!user) throw new Error('User not found')
-
-      set({
-        user,
-        isAuthenticated: true,
-      })
-
-      return user
+      set({ user, isAuthenticated: true, isLoading: false })
     } catch (e) {
-      set({
-        user: null,
-        isAuthenticated: false,
-      })
-      throw e
-    } finally {
       set({ isLoading: false })
+      throw e
     }
   },
 
-  // 🔥 LOGOUT
   logout: async () => {
     await removeToken()
-    set({
-      user: null,
-      isAuthenticated: false,
-    })
+    set({ user: null, isAuthenticated: false, isLoading: false })
   },
 
-  // 🔥 LOAD USER (APP START)
   loadUser: async () => {
     set({ isLoading: true })
-
     try {
       const user = await authService.me()
-
-      set({
-        user,
-        isAuthenticated: !!user,
-      })
+      set({ user, isAuthenticated: true, isLoading: false })
     } catch {
-      set({
-        user: null,
-        isAuthenticated: false,
-      })
-    } finally {
-      set({ isLoading: false })
+      set({ user: null, isAuthenticated: false, isLoading: false })
     }
   },
 }))

@@ -2,7 +2,7 @@ import api from './api'
 
 export const notificationsService = {
   async getMine(unread_only = false) {
-    const { data } = await api.get('/notifications', { params: { unread_only } })
+    const { data } = await api.get('/notifications/', { params: { unread_only } })
     return data
   },
 

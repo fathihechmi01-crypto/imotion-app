@@ -2,12 +2,12 @@ import api from './api'
 
 export const sessionsService = {
   async getAll(params?: { sport?: string; upcoming_only?: boolean }) {
-    const { data } = await api.get('/seances', { params })
+    const { data } = await api.get('/seances/', { params })
     return data
   },
 
   async create(payload: any) {
-    const { data } = await api.post('/seances', payload)
+    const { data } = await api.post('/seances/', payload)
     return data
   },
 
