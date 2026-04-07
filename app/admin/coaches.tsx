@@ -1,3 +1,5 @@
+import { TopNav } from '@/components/ui/TopNav'
+import { AdminDrawer, useAdminDrawer } from '@/components/ui/AdminDrawer'
 import { useState } from 'react'
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
@@ -14,6 +16,7 @@ import { Input } from '@/components/ui/Input'
 const SPORTS = ['EMS', 'Cardio', 'Musculation']
 
 export default function AdminCoachesScreen() {
+  const { visible, open, close } = useAdminDrawer()
   const qc = useQueryClient()
 
   const { data: _coaches, isLoading, refetch } = useQuery({
@@ -76,11 +79,9 @@ export default function AdminCoachesScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.black }}>
 
       {/* Header */}
+      <TopNav title="Coaches" subtitle="ADMIN" onMenuPress={open} />
       <View style={styles.header}>
         <View>
-          <Text style={styles.adminLabel}>ADMIN</Text>
-          <Text style={styles.title}>Coaches</Text>
-          <Text style={styles.count}>{coaches.length} coach{coaches.length !== 1 ? 'es' : ''}</Text>
         </View>
         <TouchableOpacity style={styles.addBtn} onPress={() => { resetForm(); setShowAdd(true) }}>
           <Text style={styles.addBtnText}>+ Ajouter</Text>
@@ -267,6 +268,7 @@ export default function AdminCoachesScreen() {
           </View>
         </View>
       </Modal>
+      <AdminDrawer visible={visible} onClose={close} />
 
     </SafeAreaView>
   )

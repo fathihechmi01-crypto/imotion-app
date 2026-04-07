@@ -1,3 +1,4 @@
+import { router } from 'expo-router'
 import { create } from 'zustand'
 import { authService } from '@/services/auth.service'
 import { removeToken } from '@/services/api'
@@ -46,6 +47,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     await removeToken()
     set({ user: null, isAuthenticated: false, isLoading: false })
+    router.replace('/auth/login')
   },
 
   loadUser: async () => {

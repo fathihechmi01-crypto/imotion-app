@@ -1,10 +1,13 @@
 import { useState } from 'react'
+import { TopNav } from '@/components/ui/TopNav'
+import { AdminDrawer, useAdminDrawer } from '@/components/ui/AdminDrawer'
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   Alert, RefreshControl, Modal, ScrollView,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import api from '@/services/api'
 import { abonnementsService, type Abonnement, type AbonnementExpiring } from '@/services/abonnements.service'
 import { paiementsService, type Paiement, type PaySum } from '@/services/paiements.service'
 import { Colors } from '@/constants/colors'
@@ -24,13 +27,16 @@ export default function AdminAbonnementsScreen() {
   const [tab, setTab]           = useState<Tab>('actifs')
   const [showAdd, setShowAdd]   = useState(false)
   const [showPay, setShowPay]   = useState(false)
-  const [userId, setUserId]     = useState('')
+  const [subEmail, setSubEmail] = useState('')
+  const [subLookupLoading, setSubLookupLoading] = useState(false)
+  const { visible, open, close } = useAdminDrawer()
   const [subType, setSubType]   = useState('basic')
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin]   = useState('')
   const [payUserId, setPayUserId] = useState('')
   const [payAmount, setPayAmount] = useState('')
   const [payDesc, setPayDesc]   = useState('')
+  const [userId, setUserId]     = useState('')
 
   const { data: _abonnements, isLoading: loadAbo, refetch: refAbo } = useQuery({
     queryKey: ['abonnements'],
@@ -58,7 +64,7 @@ export default function AdminAbonnementsScreen() {
 
   const createSubMut = useMutation({
     mutationFn: abonnementsService.create,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['abonnements'] }); setShowAdd(false); resetSub(); Alert.alert('✅ Abonnement créé !') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['abonnements'] }); setShowAdd(false); setSubEmail(''); resetSub(); Alert.alert('✅ Abonnement créé !') },
     onError: (e: any) => Alert.alert('Erreur', e.response?.data?.detail ?? 'Erreur'),
   })
   const markPaidMut = useMutation({
@@ -104,7 +110,7 @@ export default function AdminAbonnementsScreen() {
             </Text>
           </View>
         </View>
-        <Text style={styles.subUser}>Membre #{a.utilisateur_id}</Text>
+        <Text style={styles.subUser}>ID: {a.utilisateur_id}</Text>
         <Text style={[styles.subDates, expired && { color: Colors.error }]}>{a.date_debut} → {a.date_fin}{expired ? ' (Expiré)' : ''}</Text>
         <View style={styles.cardActions}>
           {!a.is_paid && (
@@ -162,10 +168,9 @@ export default function AdminAbonnementsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.black }}>
+      <TopNav title="Abonnements" subtitle="ADMIN" onMenuPress={open} />
       <View style={styles.header}>
         <View>
-          <Text style={styles.adminLabel}>ADMIN</Text>
-          <Text style={styles.title}>Abonnements</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <TouchableOpacity style={[styles.addBtn, { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.blue }]} onPress={() => setShowPay(true)}>
@@ -226,7 +231,7 @@ export default function AdminAbonnementsScreen() {
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>Nouvel Abonnement</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
-              <Input label="ID Membre *" placeholder="ex: 3" value={userId} onChangeText={setUserId} keyboardType="number-pad" style={styles.field} />
+              <Input label="Email du membre *" placeholder="membre@exemple.com" value={subEmail} onChangeText={setSubEmail} keyboardType="email-address" autoCapitalize="none" style={styles.field} />
               <Text style={styles.fieldLabel}>Type *</Text>
               <View style={styles.typePicker}>
                 {SUB_TYPES.map(t => {
@@ -242,10 +247,17 @@ export default function AdminAbonnementsScreen() {
               <Input label="Date fin *"   placeholder="2025-12-31" value={dateFin}   onChangeText={setDateFin}   style={styles.field} />
               <View style={styles.sheetActions}>
                 <Button title="Annuler" onPress={() => { setShowAdd(false); resetSub() }} variant="ghost" style={{ flex: 1 }} />
-                <Button title="Créer" loading={createSubMut.isPending} variant="gold"
+                <Button title="Créer" loading={createSubMut.isPending || subLookupLoading} variant="gold"
                   onPress={() => {
                     if (!userId || !dateDebut || !dateFin) return Alert.alert('Requis', 'Tous les champs sont obligatoires')
-                    createSubMut.mutate({ utilisateur_id: parseInt(userId), type: subType, date_debut: dateDebut, date_fin: dateFin })
+                    if (!subEmail || !dateDebut || !dateFin) return Alert.alert('Requis', 'Email et dates obligatoires. Format: YYYY-MM-DD')
+                    setSubLookupLoading(true)
+                    api.get('/users/').then(r => {
+                      const found = (r.data as any[]).find(u => u.email.toLowerCase() === subEmail.toLowerCase().trim())
+                      if (!found) { setSubLookupLoading(false); return Alert.alert('Introuvable', `Aucun membre avec l\'email: ${subEmail}`) }
+                      createSubMut.mutate({ utilisateur_id: found.id, type: subType, date_debut: dateDebut, date_fin: dateFin })
+                      setSubLookupLoading(false)
+                    }).catch(() => { setSubLookupLoading(false); Alert.alert('Erreur', 'Impossible de chercher le membre.') })
                   }} style={{ flex: 1 }} />
               </View>
             </ScrollView>
@@ -275,6 +287,7 @@ export default function AdminAbonnementsScreen() {
           </View>
         </View>
       </Modal>
+      <AdminDrawer visible={visible} onClose={close} />
     </SafeAreaView>
   )
 }

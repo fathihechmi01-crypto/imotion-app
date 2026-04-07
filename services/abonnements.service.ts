@@ -21,7 +21,7 @@ export interface AbonnementExpiring {
 
 export const abonnementsService = {
   async getMine(): Promise<Abonnement | null>                    { return api.get('/abonnements/me').then(r => r.data as Abonnement) },
-  async getAll(): Promise<Abonnement[]>                          { return api.get('/abonnements').then(r => r.data as Abonnement[]) },
+  async getAll(): Promise<Abonnement[]>                          { return api.get('/abonnements/').then(r => r.data as Abonnement[]) }, 
   async create(body: any): Promise<Abonnement>                   { return api.post('/abonnements', body).then(r => r.data as Abonnement) },
   async markPaid(id: number): Promise<Abonnement>                { return api.patch(`/abonnements/${id}/pay`).then(r => r.data as Abonnement) },
   async delete(id: number): Promise<void>                        { await api.delete(`/abonnements/${id}`) },

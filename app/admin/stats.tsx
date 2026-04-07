@@ -1,3 +1,5 @@
+import { TopNav } from '@/components/ui/TopNav'
+import { AdminDrawer, useAdminDrawer } from '@/components/ui/AdminDrawer'
 import { View, Text, StyleSheet, ScrollView, RefreshControl, Dimensions } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useQuery } from '@tanstack/react-query'
@@ -9,6 +11,7 @@ const { width } = Dimensions.get('window')
 const BAR_WIDTH = width - 80
 
 export default function AdminStatsScreen() {
+  const { visible, open, close } = useAdminDrawer()
   const { data: stats, isLoading, refetch } = useQuery({
     queryKey: ['stats'],
     queryFn: dashboardService.getStats,
@@ -29,10 +32,7 @@ export default function AdminStatsScreen() {
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={Colors.blue} />}
         contentContainerStyle={{ paddingBottom: 32 }}
       >
-        <View style={styles.header}>
-          <Text style={styles.adminLabel}>ADMIN</Text>
-          <Text style={styles.title}>Statistiques</Text>
-        </View>
+        <TopNav title="Statistiques" subtitle="ADMIN" onMenuPress={open} />
 
         {/* Retention */}
         {stats?.retention && (
@@ -162,6 +162,7 @@ export default function AdminStatsScreen() {
         )}
 
       </ScrollView>
+      <AdminDrawer visible={visible} onClose={close} />
     </SafeAreaView>
   )
 }

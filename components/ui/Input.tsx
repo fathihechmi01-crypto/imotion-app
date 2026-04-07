@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, TextInput, Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native'
+import { View, TextInput, Text, TouchableOpacity, StyleSheet, StyleProp, ViewStyle } from 'react-native'
 import { Colors } from '@/constants/colors'
 
 interface Props {
@@ -10,11 +10,12 @@ interface Props {
   secureTextEntry?: boolean
   keyboardType?: any
   error?: string
-  style?: ViewStyle
+  style?: StyleProp<ViewStyle>
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters'
+  editable?: boolean
 }
 
-export function Input({ label, placeholder, value, onChangeText, secureTextEntry, keyboardType, error, style, autoCapitalize = 'none' }: Props) {
+export function Input({ label, placeholder, value, onChangeText, secureTextEntry, keyboardType, error, style, autoCapitalize = 'none', editable }: Props) {
   const [focused, setFocused] = useState(false)
   const [shown, setShown] = useState(false)
 
@@ -31,6 +32,7 @@ export function Input({ label, placeholder, value, onChangeText, secureTextEntry
           secureTextEntry={secureTextEntry && !shown}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
+          editable={editable ?? true}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
         />
