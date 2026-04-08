@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { TopNav } from '@/components/ui/TopNav'
+import { MemberDrawer, useMemberDrawer } from '@/components/ui/MemberDrawer'
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   Modal, Alert, RefreshControl, Dimensions,
@@ -15,6 +17,7 @@ import { fr } from 'date-fns/locale'
 const { width } = Dimensions.get('window')
 
 export default function BookingsScreen() {
+  const { visible, open, close } = useMemberDrawer()
   const [qrModal, setQrModal] = useState<{ seanceId: number; token: string; sport: string } | null>(null)
   const qc = useQueryClient()
 
@@ -103,10 +106,16 @@ export default function BookingsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.black }}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Mes Réservations</Text>
-        <Text style={styles.count}>{upcoming.length} à venir</Text>
-      </View>
+      <TopNav
+        title="Mes réservations"
+        subtitle="MEMBRE"
+        onMenuPress={open}
+        rightContent={
+          upcoming.length > 0
+            ? <View style={styles.badge}><Text style={styles.badgeTxt}>{upcoming.length}</Text></View>
+            : undefined
+        }
+      />
 
       <FlatList
         data={[...upcoming, ...past]}
@@ -151,14 +160,14 @@ export default function BookingsScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
+      <MemberDrawer visible={visible} onClose={close} />
     </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
-  header:       { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title:        { color: Colors.textPrimary, fontSize: 24, fontWeight: '800' },
-  count:        { color: Colors.blue, fontSize: 14, fontWeight: '700' },
+  badge:        { backgroundColor: Colors.blue, borderRadius: 10, minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
+  badgeTxt:     { color: '#fff', fontSize: 11, fontWeight: '800' },
   list:         { paddingHorizontal: 20, paddingBottom: 20 },
   sectionLabel: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', letterSpacing: 1.5, marginBottom: 12, marginTop: 4 },
   card:         { backgroundColor: Colors.surface, borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: Colors.border },

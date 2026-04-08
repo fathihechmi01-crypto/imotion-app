@@ -1,4 +1,6 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
+import { TopNav } from '@/components/ui/TopNav'
+import { MemberDrawer, useMemberDrawer } from '@/components/ui/MemberDrawer'
 import {
   View, Text, StyleSheet, FlatList,
   TouchableOpacity, RefreshControl, Alert,
@@ -15,6 +17,7 @@ import { SessionCard } from '@/components/sessions/SessionCard'
 const SPORTS = ['Tous', 'EMS', 'Cardio', 'Musculation']
 
 export default function SessionsScreen() {
+  const { visible, open, close } = useMemberDrawer()
   const [selectedSport, setSelectedSport] = useState('Tous')
   const { user } = useAuthStore()
   const qc = useQueryClient()
@@ -64,12 +67,11 @@ export default function SessionsScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.black }}>
       {/* Header */}
       <LinearGradient colors={['rgba(41,171,226,0.12)', 'transparent']} style={styles.headerGlow} pointerEvents="none" />
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Bonjour, {user?.nom?.split(' ')[0]} 👋</Text>
-          <Text style={styles.subtitle}>Choisissez votre séance</Text>
-        </View>
-      </View>
+      <TopNav
+        title={`Bonjour, ${user?.nom?.split(' ')[0] ?? ''} 👋`}
+        subtitle="SÉANCES"
+        onMenuPress={open}
+      />
 
       {/* Sport filter */}
       <View style={styles.filterRow}>
@@ -110,15 +112,13 @@ export default function SessionsScreen() {
           />
         )}
       />
+      <MemberDrawer visible={visible} onClose={close} />
     </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
   headerGlow:       { position: 'absolute', top: 0, left: 0, right: 0, height: 160 },
-  header:           { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
-  greeting:         { color: Colors.textPrimary, fontSize: 22, fontWeight: '800' },
-  subtitle:         { color: Colors.textMuted, fontSize: 14, marginTop: 2 },
   filterRow:        { flexDirection: 'row', paddingHorizontal: 20, gap: 8, marginBottom: 16 },
   filterChip:       { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border },
   filterChipActive: { backgroundColor: Colors.blueDim, borderColor: Colors.blue },

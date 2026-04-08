@@ -1,10 +1,14 @@
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native'
+import { TopNav } from '@/components/ui/TopNav'
+import { MemberDrawer, useMemberDrawer } from '@/components/ui/MemberDrawer'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { notificationsService } from '@/services/notifications.service'
 import { Colors } from '@/constants/colors'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
+
+interface Notification { id: number; type: string; title: string; body: string; is_read: boolean; created_at: string }
 
 const TYPE_CONFIG: Record<string, { icon: string; color: string }> = {
   confirmation: { icon: '✅', color: Colors.success },
@@ -20,31 +24,29 @@ const TYPE_CONFIG: Record<string, { icon: string; color: string }> = {
 export default function NotificationsScreen() {
   const qc = useQueryClient()
 
-  const { data: notifications = [], isLoading, refetch } = useQuery({
+  const { data: _notifs, isLoading, refetch } = useQuery({
     queryKey: ['notifications'],
     queryFn: () => notificationsService.getMine(),
   })
+  const notifications: Notification[] = (_notifs as Notification[]) ?? []
 
   const markAllMutation = useMutation({
     mutationFn: notificationsService.markAllRead,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
   })
-
   const markOneMutation = useMutation({
     mutationFn: (id: number) => notificationsService.markRead(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
   })
 
-  const unreadCount = notifications.filter((n: any) => !n.is_read).length
+  const unreadCount = notifications.filter(n => !n.is_read).length
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.black }}>
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Notifications</Text>
-          {unreadCount > 0 && (
-            <Text style={styles.unreadCount}>{unreadCount} non lue{unreadCount > 1 ? 's' : ''}</Text>
-          )}
+          {unreadCount > 0 && <Text style={styles.unreadCount}>{unreadCount} non lue{unreadCount > 1 ? 's' : ''}</Text>}
         </View>
         {unreadCount > 0 && (
           <TouchableOpacity onPress={() => markAllMutation.mutate()} style={styles.markAllBtn}>
@@ -53,9 +55,9 @@ export default function NotificationsScreen() {
         )}
       </View>
 
-      <FlatList
+      <FlatList<Notification>
         data={notifications}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={item => item.id.toString()}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={Colors.blue} />}
@@ -69,7 +71,7 @@ export default function NotificationsScreen() {
           const cfg = TYPE_CONFIG[item.type] ?? { icon: '📌', color: Colors.blue }
           return (
             <TouchableOpacity
-              style={[styles.notifCard, !item.is_read && styles.notifUnread]}
+              style={[styles.card, !item.is_read && styles.cardUnread]}
               onPress={() => !item.is_read && markOneMutation.mutate(item.id)}
               activeOpacity={0.7}
             >
@@ -83,7 +85,7 @@ export default function NotificationsScreen() {
                   {formatDistanceToNow(new Date(item.created_at), { addSuffix: true, locale: fr })}
                 </Text>
               </View>
-              {!item.is_read && <View style={[styles.unreadDot, { backgroundColor: cfg.color }]} />}
+              {!item.is_read && <View style={[styles.dot, { backgroundColor: cfg.color }]} />}
             </TouchableOpacity>
           )
         }}
@@ -99,14 +101,14 @@ const styles = StyleSheet.create({
   markAllBtn:   { backgroundColor: Colors.blueDim, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7, borderWidth: 1, borderColor: Colors.blue },
   markAllText:  { color: Colors.blue, fontWeight: '700', fontSize: 13 },
   list:         { paddingHorizontal: 20, paddingBottom: 20 },
-  notifCard:    { flexDirection: 'row', gap: 14, alignItems: 'flex-start', backgroundColor: Colors.surface, borderRadius: 16, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: Colors.border },
-  notifUnread:  { borderColor: Colors.blue + '40', backgroundColor: Colors.blueDim },
+  card:         { flexDirection: 'row', gap: 14, alignItems: 'flex-start', backgroundColor: Colors.surface, borderRadius: 16, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: Colors.border },
+  cardUnread:   { borderColor: Colors.blue + '40', backgroundColor: Colors.blueDim },
   iconBox:      { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   icon:         { fontSize: 20 },
   notifTitle:   { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
   notifBody:    { color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
   notifTime:    { color: Colors.textMuted, fontSize: 11 },
-  unreadDot:    { width: 8, height: 8, borderRadius: 4, marginTop: 4 },
+  dot:          { width: 8, height: 8, borderRadius: 4, marginTop: 4 },
   empty:        { alignItems: 'center', paddingTop: 80, gap: 12 },
   emptyIcon:    { fontSize: 48 },
   emptyText:    { color: Colors.textMuted, fontSize: 16 },

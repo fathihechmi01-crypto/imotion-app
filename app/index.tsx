@@ -11,7 +11,6 @@ export default function Index() {
     loadUser()
   }, [])
 
-  // Still checking token / fetching user
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.black }}>
@@ -21,16 +20,14 @@ export default function Index() {
     )
   }
 
-  // No token or token invalid → login
   if (!isAuthenticated || !user) {
     return <Redirect href="/auth/login" />
   }
 
-  // Admin → admin dashboard
   if (user.is_admin === 1) {
     return <Redirect href="/admin/dashboard" />
   }
 
-  // Member → sessions
-  return <Redirect href="/member/sessions" />
+  // Members land on home
+  return <Redirect href="/member/home" />
 }

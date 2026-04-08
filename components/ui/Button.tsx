@@ -68,7 +68,7 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled,
 
 const styles = StyleSheet.create({
   base:        { borderRadius: 12, overflow: 'hidden' },
-  gradient:    { alignItems: 'center', justifyContent: 'center', paddingVertical: 14, paddingHorizontal: 24 },
+  gradient:    { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
   sm:          { height: 36 },
   md:          { height: 50 },
   lg:          { height: 58 },
